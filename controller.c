@@ -26,6 +26,7 @@ void controls()
     int state = 1;
 	const size_t buffsize = 4096;
     char msg[buffsize];
+	system ("/bin/stty raw");
     while(state == 1){
         switch(getchar()){
         case 'w':
@@ -51,6 +52,7 @@ void controls()
 		case 'q':
 			//code to quit
 			state = 0;
+			system ("/bin/stty cooked");
 			break;
         }
     }
