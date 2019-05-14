@@ -13,17 +13,145 @@
 #include <signal.h>
 #include <string.h>
 #include <stdbool.h>
+
+#include <stdlib.h>
+#include <pthread.h>
+#include <assert.h>
+
+int state = 1;
 void controls();
 void sendCommand();
+int updatedash();
+void delchar(char *str, char ch);
+void getCondition();
+
 int main(int argc, char *argv[])
 {
-	controls();
+	//controls();
+	//getCondition();
+	int control, condition;
+	int th;
+	pthread_t thread[3];
+	//pthread_t thread2;
+
+	if (pthread_create(&thread[0], NULL, controls, NULL) != 0) {
+		fprintf(stderr, "thread create failed\n");
+		exit(-1);
+	} else {
+		pthread_join(thread[0], NULL); // main thread
+	}
+	if (pthread_create(&thread[1], NULL, getCondition, NULL) != 0) {
+		fprintf(stderr, "thread create failed\n");
+		exit(-1);
+	} else {
+		pthread_join(thread[1], NULL); // main thread
+	}
+	
+
+	//th = pthread_create(&thread[0], NULL, controls, NULL);
+	
+	//th = pthread_create(&thread[1], NULL, getCondition, NULL);
+  	
+  	//pthread_join(control, NULL);
+	//assert(condition == 0);
+  	//pthread_join(condition, NULL);
+	exit(0);
 }
-
-
-void controls()
+void *getCondition()
 {
-    int state = 1;
+	char *host = "127.0.1.1";
+    char *port = "65200";
+    struct addrinfo *address;
+    const struct addrinfo hints = {
+        .ai_family = AF_INET,
+        .ai_socktype = SOCK_DGRAM,
+    };
+
+    int fd, err;
+
+    err = getaddrinfo(host, port, &hints, &address);
+    if (err) {
+        fprintf(stderr, "Error getting lander: %s\n", gai_strerror(err));
+        exit(1);
+    }
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd == -1) {
+        fprintf(stderr, "error making socket: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    /* Client message and  */
+    const size_t buffsize = 4096;       /* 4k */
+    char incoming[buffsize], outgoing[buffsize];
+    size_t msgsize;
+    struct sockaddr clientaddr;
+    socklen_t addrlen = sizeof(clientaddr);
+	
+	while (state == 1)
+	{
+	
+    sprintf(outgoing, "condition:?\n");    
+    sendto(fd, outgoing, strlen(outgoing), 0, address->ai_addr, address->ai_addrlen);
+
+	msgsize = recvfrom(fd, incoming, buffsize, 0, NULL, 0);
+    incoming[msgsize] = '\0';
+
+	//remove %
+	delchar(incoming, '%');
+
+
+	printf("reply \"%s\"\n", incoming);
+
+	int u = updatedash(incoming);
+	}
+
+}
+void delchar(char *str, char ch)
+{
+	char *src, *dst;
+	for (src=dst=str; *src!='\0'; src++)
+	{
+		*dst=*src;
+		if (*dst != ch) dst++;
+	}
+	*dst = '\0';
+}
+int updatedash(char *msg)
+{
+	char *host = "127.0.1.1";
+    char *port = "65250";
+    struct addrinfo *address;
+    const struct addrinfo hints = {
+        .ai_family = AF_INET,
+        .ai_socktype = SOCK_DGRAM,
+    };
+
+    int dashsock, err;
+
+    err = getaddrinfo(host, port, &hints, &address);
+    if (err) {
+        fprintf(stderr, "Error getting lander: %s\n", gai_strerror(err));
+        exit(1);
+    }
+    dashsock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (dashsock == -1) {
+        fprintf(stderr, "error making socket: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    /* Client message and  */
+    const size_t buffsize = 4096;       /* 4k */
+    char incoming[buffsize], outgoing[buffsize];
+    size_t msgsize;
+    struct sockaddr clientaddr;
+    socklen_t addrlen = sizeof(clientaddr);
+
+    strcpy(outgoing, msg);    
+    sendto(dashsock, outgoing, strlen(outgoing), 0, address->ai_addr, address->ai_addrlen);
+	return 1;
+}
+void *controls()
+{	
 	const size_t buffsize = 4096;
     char msg[buffsize];
 	system ("/bin/stty raw");
