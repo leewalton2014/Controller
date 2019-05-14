@@ -25,38 +25,7 @@ int updatedash();
 void delchar(char *str, char ch);
 void getCondition();
 
-int main(int argc, char *argv[])
-{
-	//controls();
-	//getCondition();
-	int control, condition;
-	int th;
-	pthread_t thread[3];
-	//pthread_t thread2;
 
-	if (pthread_create(&thread[0], NULL, controls, NULL) != 0) {
-		fprintf(stderr, "thread create failed\n");
-		exit(-1);
-	} else {
-		pthread_join(thread[0], NULL); // main thread
-	}
-	if (pthread_create(&thread[1], NULL, getCondition, NULL) != 0) {
-		fprintf(stderr, "thread create failed\n");
-		exit(-1);
-	} else {
-		pthread_join(thread[1], NULL); // main thread
-	}
-	
-
-	//th = pthread_create(&thread[0], NULL, controls, NULL);
-	
-	//th = pthread_create(&thread[1], NULL, getCondition, NULL);
-  	
-  	//pthread_join(control, NULL);
-	//assert(condition == 0);
-  	//pthread_join(condition, NULL);
-	exit(0);
-}
 void *getCondition()
 {
 	char *host = "127.0.1.1";
@@ -104,7 +73,7 @@ void *getCondition()
 
 	int u = updatedash(incoming);
 	}
-
+	return null;
 }
 void delchar(char *str, char ch)
 {
@@ -219,4 +188,40 @@ void sendCommand(char command[4096])
 
     strcpy(outgoing, command);    
     sendto(fd, outgoing, strlen(outgoing), 0, address->ai_addr, address->ai_addrlen);
+}
+
+
+
+int main(int argc, char *argv[])
+{
+	//controls();
+	//getCondition();
+	int control, condition;
+	int th;
+	pthread_t thread1, thread2;
+
+	if (pthread_create(&thread1, NULL, controls, NULL) != 0) {
+		fprintf(stderr, "thread create failed\n");
+		exit(-1);
+	} else {
+		pthread_join(thread1, NULL); // main thread
+		return 1;
+	}
+	if (pthread_create(&thread2, NULL, getCondition, NULL) != 0) {
+		fprintf(stderr, "thread create failed\n");
+		exit(-1);
+	} else {
+		pthread_join(thread2, NULL); // main thread
+		return 1;
+	}
+	
+
+	//th = pthread_create(&thread[0], NULL, controls, NULL);
+	
+	//th = pthread_create(&thread[1], NULL, getCondition, NULL);
+  	
+  	//pthread_join(control, NULL);
+	//assert(condition == 0);
+  	//pthread_join(condition, NULL);
+	exit(0);
 }
